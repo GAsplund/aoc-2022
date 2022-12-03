@@ -1,50 +1,50 @@
-WITH nest AS (
+WITH backpacks AS (
     SELECT
-        a.elem,
-        a.nr 
+        a.nr AS id,
+        a.elem AS contents
     FROM
-        UNNEST( string_to_array( pg_read_file('./input.txt'), E'\r\n' ) ) WITH ORDINALITY AS a(elem, nr) 
+        UNNEST(string_to_array(pg_read_file('./input.txt'), E'\r\n')) WITH ORDINALITY AS a(elem, nr)
 ),
-common AS (
+common_items AS (
     SELECT
-        nest.nr,
-        ARRAY( 
-            SELECT UNNEST( string_to_array( SUBSTRING( nest.elem FROM 0 FOR LENGTH(nest.elem) / 2 + 1 ), NULL ) )
+        backpacks.id,
+        ARRAY(
+            SELECT UNNEST(string_to_array(SUBSTRING(backpacks.contents FROM 0 FOR LENGTH(backpacks.contents) / 2 + 1 ), NULL))
             INTERSECT
-            SELECT UNNEST( string_to_array( SUBSTRING( nest.elem FROM LENGTH(nest.elem) / 2 + 1 FOR LENGTH(nest.elem) ), NULL ) ) 
+            SELECT UNNEST(string_to_array(SUBSTRING(backpacks.contents FROM LENGTH(backpacks.contents) / 2 + 1 FOR LENGTH(backpacks.contents) ), NULL))
         )
-        FROM nest 
+        FROM backpacks 
 ),
 common_groups AS (
     SELECT
-        nest.nr,
-        ARRAY( 
-            SELECT UNNEST( string_to_array(nest.elem, NULL) ) 
+        backpacks.id,
+        ARRAY(
+            SELECT UNNEST(string_to_array(backpacks.contents, NULL))
             INTERSECT
-            SELECT UNNEST( string_to_array( ( SELECT elem FROM nest AS leadpack WHERE leadpack.nr = nest.nr + 1 ), NULL ) ) 
+            SELECT UNNEST(string_to_array((SELECT contents FROM backpacks AS newbackpack WHERE newbackpack.id = backpacks.id + 1 ), NULL))
             INTERSECT
-            SELECT UNNEST( string_to_array( ( SELECT elem FROM nest AS leadpack  WHERE leadpack.nr = nest.nr + 2 ), NULL ) ) 
-        ) AS badge 
+            SELECT UNNEST(string_to_array((SELECT contents FROM backpacks AS newbackpack  WHERE newbackpack.id = backpacks.id + 2 ), NULL))
+        ) AS badge
         FROM
-            nest 
+            backpacks
         WHERE
-            nest.nr % 3 = 1 
+            backpacks.id % 3 = 1
 )
 SELECT
     SUM(( SELECT
-        SUM( 
+        SUM(
             CASE
                 WHEN LOWER(letter) = letter THEN ascii(letter) - 96
                 ELSE ascii(letter) - (64 - 26)
             END
         ) AS priority 
         FROM
-            UNNEST(common_letters.ARRAY) AS letter
+            UNNEST(common_items.ARRAY) AS letter
     )) AS solution1,
-    DIV( 
-        SUM(( 
+    DIV(
+        SUM((
             SELECT
-                SUM( 
+                SUM(
                     CASE
                         WHEN LOWER(letter) = letter THEN ascii(letter) - 96
                         ELSE ascii(letter) - (64 - 26)
@@ -55,10 +55,10 @@ SELECT
         3 -- Div by 3 due to duplication when using inner join
     ) AS solution2
 FROM
-    nest
+    backpacks
     JOIN
-        common AS common_letters 
-        ON nest.nr = common_letters.nr 
+        common_items
+        ON backpacks.id = common_items.id 
     JOIN
-        common_groups 
-        ON nest.nr = common_groups.nr + ( (nest.nr - 1) % 3 );
+        common_groups
+        ON backpacks.id = common_groups.id + ((backpacks.id - 1) % 3);
