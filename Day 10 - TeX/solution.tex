@@ -1,0 +1,96 @@
+\documentclass{article}
+
+\usepackage[margin=0.7in]{geometry}
+\usepackage[parfill]{parskip}
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsmath,amssymb,amsfonts,amsthm}
+
+\usepackage{xstring}
+\usepackage{catchfile}
+\usepackage{stringstrings}
+\usepackage{xifthen}
+\usepackage[nomessages]{fp}
+\usepackage{intcalc}
+
+\begin{document}
+
+    % Variables
+    \newcommand{\filepath}{input.txt}
+    \newtoks\screen
+    \def\cycle{0}
+    \def\xreg{1}
+    \def\signalstrength{0}
+
+    % CRT is 6 rows and 40 columns, aka 240 pixels
+
+    \newcommand\checkcycle{
+        % Part 1:
+        \ifthenelse{\equal{\intcalcMod{\cycle}{40}}{20}}
+        {
+            \FPeval{\strength}{round(\cycle * \xreg, 0)}
+            Cycle: \cycle\\
+            Strength: \strength\\
+            \FPeval{\signalstrength}{round(\signalstrength + (\cycle * \xreg), 0)}
+        }
+        {}
+
+        % Part 2 draw sprite on screen: 
+        \edef\curscreen{\the\screen}
+        \FPeval{\cursor}{round(\intcalcMod{\cycle}{40}, 0)}
+        \FPeval{\spriteRel}{round(\cursor - \xreg, 0)}
+
+        % Add new line if screen has wrapped around
+        \ifthenelse{\equal{\cursor}{1}}
+        {
+            \edef\newscreen{\curscreen%
+            \\}
+            \screen={\newscreen}
+        }
+        {}
+
+        % Add lit or unlit pixel based on sprite position
+        \ifthenelse{\equal{\spriteRel}{0} \OR \equal{\spriteRel}{1} \OR \equal{\spriteRel}{2}}
+        {
+            \edef\newscreen{\curscreen%
+            $\blacksquare$}
+            \screen={\newscreen}
+        }
+        {
+            \edef\newscreen{\curscreen%
+            $\square$}
+            \screen={\newscreen}
+        }
+    }
+
+    \textbf{Cycle checkpoints:}
+
+    \newread\file
+        \openin\file=\filepath
+        \loop\unless\ifeof\file
+            \read\file to\fileline % Reads a line of the file into \fileline
+                \FPeval{\cycle}{round(\cycle + 1, 0)}
+                \substring[q]{\fileline}{1}{4}
+                \edef\instruction{\thestring}
+                \ifthenelse{\equal{\instruction}{addx}}
+                {
+                    \checkcycle
+                    \FPeval{\cycle}{round(\cycle + 1, 0)}
+                    \checkcycle
+
+                    % RIP highlighter, it thinks it's in math mode now.
+                    \substring[q]{\fileline}{6}{$-1}
+                    \FPeval{\xreg}{round(\xreg + \thestring, 0)}
+                }
+                {
+                    \checkcycle
+                }
+        \repeat
+    \closein\file
+
+    % Finally, print solutions
+    \textbf{Solution 1:} \signalstrength\\
+    \textbf{Solution 2:}\\
+    \the\screen
+
+\end{document}
