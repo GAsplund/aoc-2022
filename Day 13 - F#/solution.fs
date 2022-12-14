@@ -9,7 +9,7 @@ type PacketPair(one: obj list, two: obj list) =
 type Packet(data: obj list) =
     member val data = data
 
-let readText = System.IO.File.ReadAllLines "H:/Content Creation/Programming/Gits/My Gits/aoc-2022/Day 13 - F#/AoC-2022-Day13/input.txt"
+let readText = System.IO.File.ReadAllLines "./input.txt"
 
 let packetPairs: PacketPair list = [
     for i in [0 .. (readText.Length - 1)/3] do 
