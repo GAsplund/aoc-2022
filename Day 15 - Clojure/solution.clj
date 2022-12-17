@@ -18,7 +18,8 @@
 (def sensorranges (for [pair sensorpairs] [(nth pair 0), (manhattan (nth pair 0) (nth pair 1))]))
 (def knownbeacons (set (for [pair sensorpairs] [(get (nth pair 1) 0), (get (nth pair 1) 1)])))
 
-(def sensorcoverage (set (apply concat (for [sensor sensorranges] (lineCoords (nth sensor 0)  (nth sensor 1) 10 )))))
+; Hardcoded numbers... not very fun lol (desired y level at last numberic argument)
+(def sensorcoverage (set (apply concat (for [sensor sensorranges] (lineCoords (nth sensor 0)  (nth sensor 1) 2000000 )))))
 
 (def nobeacons (set/difference sensorcoverage knownbeacons))
 (def nobeaconscnt (count nobeacons))
@@ -39,7 +40,7 @@
     (if (and (validspot loc maxLoc) (not (insiderange loc))) loc)
     )))
 
-(def result2 (nth (remove nil? (set (apply concat(emptyspot 20)))) 0))
+(def result2 (nth (remove nil? (set (apply concat(emptyspot 4000000)))) 0))
 
 (println "Solution 1:")
 (println nobeaconscnt)
