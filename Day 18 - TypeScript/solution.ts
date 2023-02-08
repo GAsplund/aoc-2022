@@ -29,7 +29,7 @@ function getOuterSurface(outer) {
   return surfaceArea
 }
 
-function setMinMax(cube) {
+function setMinMax(cube: [number, number, number] | number[]) {
   if(cube[0] < xmin) xmin = cube[0];
   if(cube[0] > xmax) xmax = cube[0];
   if(cube[1] < ymin) ymin = cube[1];
@@ -47,7 +47,7 @@ function insideRange(cube) {
 function addCube (cube: string) {
   adjacents.add(cube)
   let coords: string[] = cube.split(",");
-  var coordsNum: number[] = [];
+  var coordsNum: [number, number, number] | number[] = [];
   coords.forEach(coord => {
     coordsNum.push(parseInt(coord))
   });
@@ -55,7 +55,7 @@ function addCube (cube: string) {
   setMinMax(coordsNum);
 }
 
-function sumArray(a, b) {
+function sumArray(a: number[], b: number[]) {
   var c = [];
   for (var i = 0; i < Math.max(a.length, b.length); i++) {
     c.push((a[i] || 0) + (b[i] || 0));
